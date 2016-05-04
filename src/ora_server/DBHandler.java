@@ -34,10 +34,12 @@ public abstract class DBHandler {
         try {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
             
-            String URL = "jdbc:mysql://127.0.0.1:3306/mydb?user=root&password=root";
+            String URL = "jdbc:mysql://127.0.0.1:3306/mydb?user=root&password=toor";
             c = DriverManager.getConnection(URL);
             if(!c.isClosed()){
                 System.out.println("Connection established with Database");
+            }else{
+                System.out.println("Not established");
             }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | SQLException ex) {
 
