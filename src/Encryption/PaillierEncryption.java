@@ -29,9 +29,10 @@ public class PaillierEncryption {
         verifyModularMultiplicativeInverse();
     }
     
-    public BigInteger encrypt(byte[] p){
+    public BigInteger encrypt(BigInteger p){
         BigInteger r = createRandomBigInteger();
-        BigInteger cipher = (g.pow(m.intValueExact())).multiply((r.pow(n.intValueExact()))).mod(n.pow(2));
+        //NOT WORKING
+        BigInteger cipher = (g.pow(p.intValueExact())).multiply((r.pow(n.intValueExact()))).mod(n.pow(2));
         System.out.println(cipher);
         
         return cipher;
