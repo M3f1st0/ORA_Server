@@ -19,7 +19,7 @@ public class PaillierEncryption {
     private BigInteger g;
     private BigInteger lamda;
     private BigInteger m;
-    private final int NUMBER_OF_BITS = 32;
+    private final int NUMBER_OF_BITS = 12;
 
     public void initialize() {
 
@@ -27,28 +27,28 @@ public class PaillierEncryption {
         do {
             isGeneratedproperly = generatePrimeNumbers();
         } while (!isGeneratedproperly);
-        System.out.println("p = " + p);
-        System.out.println("q = " + q);
+        //System.out.println("p = " + p);
+        //System.out.println("q = " + q);
         this.n = calculateN(p, q);
-        System.out.println("n = " + n);
+        //System.out.println("n = " + n);
         this.lamda = calculateSmallLamda(p, q);
-        System.out.println("lamda = " + lamda);
+        //System.out.println("lamda = " + lamda);
         this.g = calculateSmallG(n);
 //        while (!verifyModularMultiplicativeInverse()) {
 //            this.g = calculateSmallG(n);
 //        }
-        System.out.println("g = " + g);
+        //System.out.println("g = " + g);
         this.m = calculateMi();
-        System.out.println("m = " + m);
+        //System.out.println("m = " + m);
 
     }
 
     public BigInteger encrypt(BigInteger msg) {
         BigInteger r = createRandomBigInteger();
-        System.out.println("r = " + r);
+        //System.out.println("r = " + r);
         BigInteger gPowmsg = g.pow(msg.intValueExact());
         BigInteger rPown = pow(r,n);
-
+//        BigInteger rPown = r.modPow(n, gPowmsg);
         BigInteger nsqrd = n.pow(2);
         BigInteger cipher = (gPowmsg.multiply((rPown)).mod(nsqrd));
 
@@ -61,6 +61,12 @@ public class PaillierEncryption {
 
         BigInteger pt = (nominator.multiply(m)).mod(n);
 
+        return pt;
+    }
+    
+    public BigInteger homomorphicAddition(BigInteger[] ciphertexts){
+        BigInteger pt=null;
+        
         return pt;
     }
 
@@ -119,8 +125,8 @@ public class PaillierEncryption {
     private BigInteger calculateSmallLamda(BigInteger p, BigInteger q) {
         // lambda=lcm}(p-1,q-1)
         BigInteger smallLamda;
-//        smallLamda = lcm(p.subtract(BigInteger.ONE), q.subtract(BigInteger.ONE));
-        smallLamda = calculatePhi();
+        smallLamda = lcm(p.subtract(BigInteger.ONE), q.subtract(BigInteger.ONE));
+//        smallLamda = calculatePhi();
         return smallLamda;
     }
 
@@ -129,13 +135,15 @@ public class PaillierEncryption {
         return g;
     }
 
-    private BigInteger calculatePhi() {
-        BigInteger phi = (p.subtract(BigInteger.ONE)).multiply(q.subtract(BigInteger.ONE));
-        return phi;
-    }
+//    private BigInteger calculatePhi() {
+//        BigInteger phi = (p.subtract(BigInteger.ONE)).multiply(q.subtract(BigInteger.ONE));
+//        return phi;
+//    }
 
     private BigInteger calculateMi() {
-        BigInteger mi = lamda.modInverse(n);
+        //BigInteger mi = lamda.modInverse(n);
+        BigInteger mi = LofU((g.pow(lamda.intValueExact())).mod(n.pow(2)));
+        mi = mi.modInverse(n);
         return mi;
     }
 
@@ -149,12 +157,12 @@ public class PaillierEncryption {
     }
 
     private BigInteger createRandomBigInteger() {
-        BigInteger y = new BigInteger(NUMBER_OF_BITS, new Random());
-        System.out.println("y " + y);
-        int i = y.compareTo(n);
-        if (i == 1) {
-            y = y.subtract(n);
-        }
+        BigInteger y = new BigInteger(NUMBER_OF_BITS, new Random(System.currentTimeMillis()));
+        //System.out.println("y " + y);
+//        int i = y.compareTo(n);
+//        if (i == 1) {
+//            y = y.subtract(n);
+//        }
         return y;
     }
 
