@@ -38,10 +38,14 @@ public class PaillierEncryption {
         return cipher;
     }
     
-    public BigInteger decrypt(byte[] c){
+    public BigInteger decrypt(BigInteger c){
         BigInteger sum=null;
+        BigInteger pt=null;
         
-        return sum;
+        pt = LofU((c.pow(lamda.intValueExact())).mod(n.pow(2))).multiply(m.mod(n.pow(2)));
+        
+        
+        return pt;
     }
 
     public BigInteger[] createPublicKey() {
@@ -73,6 +77,10 @@ public class PaillierEncryption {
             return false;
         }
 
+    }
+    
+    private BigInteger LofU(BigInteger u){
+        return (u.subtract(BigInteger.ONE)).divide(n);
     }
 
     private BigInteger calculateN(BigInteger p, BigInteger q) {
