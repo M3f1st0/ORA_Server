@@ -19,33 +19,65 @@ public class PaillierEncryption {
     private BigInteger g;
     private BigInteger lamda;
     private BigInteger m;
-    private final int NUMBER_OF_BITS = 5;
-    
-    public void initialize(){
-        generatePrimeNumbers();
+    private final int NUMBER_OF_BITS = 32;
+
+    public void initialize() {
+
+        boolean isGeneratedproperly = false;
+        do {
+            isGeneratedproperly = generatePrimeNumbers();
+        } while (!isGeneratedproperly);
+        System.out.println("p = " + p);
+        System.out.println("q = " + q);
         this.n = calculateN(p, q);
+        System.out.println("n = " + n);
         this.lamda = calculateSmallLamda(p, q);
+        System.out.println("lamda = " + lamda);
         this.g = calculateSmallG(n);
-        verifyModularMultiplicativeInverse();
+//        while (!verifyModularMultiplicativeInverse()) {
+//            this.g = calculateSmallG(n);
+//        }
+        System.out.println("g = " + g);
+        this.m = calculateMi();
+        System.out.println("m = " + m);
+
     }
-    
-    public BigInteger encrypt(BigInteger p){
+
+    public BigInteger encrypt(BigInteger msg) {
         BigInteger r = createRandomBigInteger();
-        //NOT WORKING
-        BigInteger cipher = (g.pow(p.intValueExact())).multiply((r.pow(n.intValueExact()))).mod(n.pow(2));
-        System.out.println(cipher);
-        
+        System.out.println("r = " + r);
+        BigInteger gPowmsg = g.pow(msg.intValueExact());
+        BigInteger rPown = pow(r,n);
+
+        BigInteger nsqrd = n.pow(2);
+        BigInteger cipher = (gPowmsg.multiply((rPown)).mod(nsqrd));
+
         return cipher;
     }
-    
-    public BigInteger decrypt(BigInteger c){
-        BigInteger sum=null;
-        BigInteger pt=null;
-        
-        pt = LofU((c.pow(lamda.intValueExact())).mod(n.pow(2))).multiply(m.mod(n.pow(2)));
-        
-        
+
+    public BigInteger decrypt(BigInteger c) {
+
+        BigInteger nominator = LofU((c.pow(lamda.intValueExact())).mod(n.pow(2)));
+
+        BigInteger pt = (nominator.multiply(m)).mod(n);
+
         return pt;
+    }
+
+    private BigInteger pow(BigInteger base, BigInteger exponent) {
+        BigInteger result = BigInteger.ONE;
+        while (exponent.signum() > 0) {
+            if (exponent.testBit(0)) {
+                result = result.multiply(base);
+            }
+            base = base.multiply(base);
+            exponent = exponent.shiftRight(1);
+        }
+        return result;
+    }
+
+    private BigInteger LofU(BigInteger u) {
+        return (u.subtract(BigInteger.ONE)).divide(n);
     }
 
     public BigInteger[] createPublicKey() {
@@ -54,8 +86,8 @@ public class PaillierEncryption {
         publicKey[1] = g;
         return publicKey;
     }
-    
-    public BigInteger[] createPrivateKey(){
+
+    public BigInteger[] createPrivateKey() {
         BigInteger[] privateKey = new BigInteger[2];
         privateKey[0] = lamda;
         privateKey[1] = m;
@@ -66,6 +98,7 @@ public class PaillierEncryption {
         createP(System.currentTimeMillis());
         createQ(System.currentTimeMillis());
 
+        //p and q must be of equal bit length
         while (p.bitLength() != p.bitLength()) {
             createP(System.currentTimeMillis());
             createQ(System.currentTimeMillis());
@@ -78,10 +111,6 @@ public class PaillierEncryption {
         }
 
     }
-    
-    private BigInteger LofU(BigInteger u){
-        return (u.subtract(BigInteger.ONE)).divide(n);
-    }
 
     private BigInteger calculateN(BigInteger p, BigInteger q) {
         return p.multiply(q);
@@ -90,49 +119,43 @@ public class PaillierEncryption {
     private BigInteger calculateSmallLamda(BigInteger p, BigInteger q) {
         // lambda=lcm}(p-1,q-1)
         BigInteger smallLamda;
-        smallLamda = lcm(p.subtract(BigInteger.ONE), q.subtract(BigInteger.ONE));
-        System.out.println("lamda "+smallLamda);
+//        smallLamda = lcm(p.subtract(BigInteger.ONE), q.subtract(BigInteger.ONE));
+        smallLamda = calculatePhi();
         return smallLamda;
     }
 
     private BigInteger calculateSmallG(BigInteger n) {
-        BigInteger g = createRandomBigInteger();
-
-        if ((g.compareTo(this.g)) == -1) {
-            g.add(n.multiply(n));
-        }
+        BigInteger g = n.add(BigInteger.ONE);
         return g;
     }
 
+    private BigInteger calculatePhi() {
+        BigInteger phi = (p.subtract(BigInteger.ONE)).multiply(q.subtract(BigInteger.ONE));
+        return phi;
+    }
+
+    private BigInteger calculateMi() {
+        BigInteger mi = lamda.modInverse(n);
+        return mi;
+    }
+
     /*
-    *Ensure n divides the order of g by checking the existence of the following 
-    *modular multiplicative inverse: m = (L(g^lambda mod n^2))^-1 \mod n
-    *where function L is defined as L(u) = u-1/n . 
+     *Ensure n divides the order of g by checking the existence of the following 
+     *modular multiplicative inverse: m = (L(g^lambda mod n^2))^-1 \mod n
+     *where function L is defined as L(u) = u-1/n . 
      */
     private boolean verifyModularMultiplicativeInverse() {
-        if(gcd(g,n).equals(BigInteger.ONE)){
-            System.out.println("Multiplicative inverse of g mod n exists");
-        } 
-        System.out.println("gcd(g,n)= "+gcd(g,n));
-        m = g.modInverse(n);
-        BigInteger x = g.multiply(m);
-        
-        //checking if x is g*x is congruent to 1 mod n
-        System.out.println("x ="+x);
-        System.out.println("x mod n ="+x.mod(n));
-        System.out.println("1 mod n = "+BigInteger.ONE.mod(n));
-        System.out.println("m ="+m);
-
-        return true;
+        return gcd((LofU(g.pow(lamda.intValueExact()))), n).equals(BigInteger.ONE);
     }
-    
-    private BigInteger createRandomBigInteger(){
-        BigInteger x = new BigInteger(NUMBER_OF_BITS, new Random());
 
-        if ((x.compareTo(g)) == -1) {
-            x.add(n.multiply(n));
+    private BigInteger createRandomBigInteger() {
+        BigInteger y = new BigInteger(NUMBER_OF_BITS, new Random());
+        System.out.println("y " + y);
+        int i = y.compareTo(n);
+        if (i == 1) {
+            y = y.subtract(n);
         }
-        return x;
+        return y;
     }
 
     private void createP(long randomSeed) {
