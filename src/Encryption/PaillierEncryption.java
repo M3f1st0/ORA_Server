@@ -19,7 +19,7 @@ public class PaillierEncryption {
     private BigInteger g;
     private BigInteger lamda;
     private BigInteger m;
-    private final int NUMBER_OF_BITS = 12;
+    private final int BIT_LENGTH = 8;
 
     public void initialize() {
 
@@ -27,19 +27,19 @@ public class PaillierEncryption {
         do {
             isGeneratedproperly = generatePrimeNumbers();
         } while (!isGeneratedproperly);
-        //System.out.println("p = " + p);
-        //System.out.println("q = " + q);
+        System.out.println("p = " + p);
+        System.out.println("q = " + q);
         this.n = calculateN(p, q);
-        //System.out.println("n = " + n);
+        System.out.println("n = " + n);
         this.lamda = calculateSmallLamda(p, q);
-        //System.out.println("lamda = " + lamda);
+        System.out.println("lamda = " + lamda);
         this.g = calculateSmallG(n);
-//        while (!verifyModularMultiplicativeInverse()) {
-//            this.g = calculateSmallG(n);
-//        }
-        //System.out.println("g = " + g);
+        while (!verifyModularMultiplicativeInverse()) {
+            this.g = calculateSmallG(n);
+        }
+        System.out.println("g = " + g);
         this.m = calculateMi();
-        //System.out.println("m = " + m);
+        System.out.println("m = " + m);
 
     }
 
@@ -65,9 +65,10 @@ public class PaillierEncryption {
     }
     
     public BigInteger homomorphicAddition(BigInteger[] ciphertexts){
-        BigInteger pt=null;
+        //The product of ciphertexts results in the addition of the plaintexts
+        //Magic of math :)
         
-        return pt;
+        return decrypt(ciphertexts[0].multiply(ciphertexts[1]).mod(n.pow(2)));
     }
 
     private BigInteger pow(BigInteger base, BigInteger exponent) {
@@ -105,10 +106,10 @@ public class PaillierEncryption {
         createQ(System.currentTimeMillis());
 
         //p and q must be of equal bit length
-        while (p.bitLength() != p.bitLength()) {
-            createP(System.currentTimeMillis());
-            createQ(System.currentTimeMillis());
-        }
+//        while (p.bitLength() != p.bitLength()) {
+//            createP(System.currentTimeMillis());
+//            createQ(System.currentTimeMillis());
+//        }
         //verify p,q property gcd(pq, (p-1)(q-1))=1
         if (gcd(p.multiply(q), (p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE)))).equals(BigInteger.ONE)) {
             return true;
@@ -157,7 +158,7 @@ public class PaillierEncryption {
     }
 
     private BigInteger createRandomBigInteger() {
-        BigInteger y = new BigInteger(NUMBER_OF_BITS, new Random(System.currentTimeMillis()));
+        BigInteger y = new BigInteger(BIT_LENGTH, new Random(System.currentTimeMillis()));
         //System.out.println("y " + y);
 //        int i = y.compareTo(n);
 //        if (i == 1) {
@@ -178,7 +179,7 @@ public class PaillierEncryption {
 
     private BigInteger createPrimeNumber(long randomSeed) {
         BigInteger prime;
-        prime = java.math.BigInteger.probablePrime(NUMBER_OF_BITS, new Random(randomSeed));
+        prime = java.math.BigInteger.probablePrime(BIT_LENGTH, new Random(randomSeed));
 
         return prime;
     }
