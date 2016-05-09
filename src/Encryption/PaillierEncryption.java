@@ -64,11 +64,17 @@ public class PaillierEncryption {
         return pt;
     }
     
-    public BigInteger homomorphicAddition(BigInteger[] ciphertexts){
-        //The product of ciphertexts results in the addition of the plaintexts
+    public BigInteger homomorphicAddition(BigInteger[] arrayWithEncryptedVotes){
+        //The product of arrayWithEncryptedVotes results in the addition of the plaintexts
         //Magic of math :)
         
-        return decrypt(ciphertexts[0].multiply(ciphertexts[1]).mod(n.pow(2)));
+        BigInteger cipherProduct = new BigInteger("1");
+        //multiply all the encrypted votes
+        for(int i=0; i<arrayWithEncryptedVotes.length; i++){
+            cipherProduct = cipherProduct.multiply(arrayWithEncryptedVotes[i]);
+        }
+        //do modulation and feed it to the decryption method
+        return decrypt(cipherProduct.mod(n.pow(2)));
     }
 
     private BigInteger pow(BigInteger base, BigInteger exponent) {
