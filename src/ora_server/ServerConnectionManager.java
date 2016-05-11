@@ -17,7 +17,7 @@ import com.sun.net.ssl.internal.ssl.Provider;
  *
  * @author Karolis
  */
-public class ConnectionManager {
+public class ServerConnectionManager {
 
     private final int intSSLport = 4443;
 

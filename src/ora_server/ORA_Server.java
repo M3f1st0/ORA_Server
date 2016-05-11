@@ -16,7 +16,7 @@ public class ORA_Server {
      */
     public static void main(String[] args) {
         // TODO code application logic here
-        ConnectionManager connectionManager = new ConnectionManager();
+        ServerConnectionManager connectionManager = new ServerConnectionManager();
         connectionManager.connectToDB();
         connectionManager.processClient();
     }
