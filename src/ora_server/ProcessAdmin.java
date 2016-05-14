@@ -14,11 +14,11 @@ import javax.net.ssl.SSLSocket;
  *
  * @author Karolis
  */
-public class ProcessClient implements Runnable {
+public class ProcessAdmin implements Runnable {
 
     private final SSLSocket socket;
 
-    public ProcessClient(SSLSocket socket) {
+    public ProcessAdmin(SSLSocket socket) {
         this.socket = socket;
     }
 
@@ -26,7 +26,7 @@ public class ProcessClient implements Runnable {
     public void run() {
         try {
             Thread.sleep(10000);
-            System.out.println("CLient Thread Started");
+            System.out.println("Admin Thread Started");
             Thread.sleep(5000);
             terminateThread();
         } catch (InterruptedException ex) {
@@ -35,7 +35,7 @@ public class ProcessClient implements Runnable {
     }
 
     public void terminateThread() {
-        System.out.println("Client Thread terminating");
+        System.out.println("Admin Thread terminating");
         closeSocket();
         Thread.currentThread().interrupt();
     }

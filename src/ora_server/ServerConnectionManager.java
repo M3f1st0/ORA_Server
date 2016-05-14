@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 public class ServerConnectionManager {
 
     private final int intSSLport = 4443;
+    private boolean keepProcessing = true;
 
     public void processClient() {
         // Registering the JSSE provider
@@ -38,7 +39,7 @@ public class ServerConnectionManager {
             SSLServerSocketFactory sslServerSocketfactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
             SSLServerSocket sslServerSocket = (SSLServerSocket) sslServerSocketfactory.createServerSocket(intSSLport);
 
-            for (int i = 0; i < 2; i++) {
+            while (keepProcessing) {
                 System.out.println("wait connection");
                 SSLSocket sslSocket = (SSLSocket) sslServerSocket.accept();
                 process(sslSocket);
@@ -57,31 +58,20 @@ public class ServerConnectionManager {
     }
 
     public void process(SSLSocket socket) {
-        ProcessClient processClient = new ProcessClient(socket);
-        Thread clientConnection = new Thread(processClient);
-        clientConnection.start();
+        String type = MessageUtils.receiveMessage(socket);
+        if (type.contentEquals("Client")) {
+            ProcessClient processClient = new ProcessClient(socket);
+            Thread clientConnection = new Thread(processClient);
+            clientConnection.start();
+        } else if (type.contentEquals("Admin")) {
+            ProcessAdmin processAdmin = new ProcessAdmin(socket);
+            Thread clientConnection = new Thread(processAdmin);
+            clientConnection.start();
+        }
     }
 
-    public void sendMessage() {
-        // Create Input / Output Streams for communication with the client
-//            while (true) {
-//                PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true);
-//                BufferedReader in = new BufferedReader(
-//                        new InputStreamReader(
-//                                sslSocket.getInputStream()));
-//                String inputLine, outputLine;
-//
-//                while ((inputLine = in.readLine()) != null) {
-//                    out.println(inputLine);
-//                    System.out.println(inputLine);
-//                }
-//
-//                // Close the streams and the socket
-//                out.close();
-//                in.close();
-//                sslSocket.close();
-//                sslServerSocket.close();
-//
-//            }
+    public void stopProcessing() {
+        keepProcessing = false;
     }
+
 }
