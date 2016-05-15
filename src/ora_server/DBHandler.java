@@ -1,17 +1,10 @@
 package ora_server;
 
-
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.LinkedList;
-import java.util.List;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -20,54 +13,76 @@ import javafx.collections.ObservableList;
  */
 /**
  *
- * @author Karolis
+ * @author Panagiotis Bitharis
  */
 public abstract class DBHandler {
 
     private static Connection c;
 
-    
-    
     private static PreparedStatement listAdmins;
 
     public static void connect() {
         try {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
-            
+
             //String URL = "jdbc:mysql://127.0.0.1:3306/mydb?user=root&password=toor";
             String URL = "jdbc:mysql://127.0.0.1:3306/mydb?user=root&password=root";
             c = DriverManager.getConnection(URL);
-            if(!c.isClosed()){
+            if (!c.isClosed()) {
                 System.out.println("Connection established with Database");
-            }else{
+            } else {
                 System.out.println("Not established");
             }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | SQLException ex) {
 
         }
     }
-    
-    public static int login(String name, String pass) {
-        int customerID = -1;
-        try {
 
-            PreparedStatement findUser = c.prepareStatement("SELECT * FROM admins WHERE adminUserName = ?");
-            findUser.setString(1, name);
+    public static boolean findUser(String userName, String tableName) {
+        boolean found = false;
+        try {
+            PreparedStatement findUser = c.prepareStatement("SELECT * FROM " + tableName + " WHERE username = ?");
+            findUser.setString(1, userName);
             ResultSet rs = findUser.executeQuery();
 
             while (rs.next()) {
-                if (pass.equals(rs.getString("adminPassword")) && name.contentEquals(rs.getString("adminUserName"))) {
-                    customerID = rs.getInt("adminID");
+                if (userName.contentEquals(rs.getString("username"))) {
+                    found = true;
                 } else {
                     throw new Exception();
                 }
             }
-
         } catch (Exception ex) {
-
+            System.err.println(ex.getMessage());
         }
-        return customerID;
+        return found;
     }
-
     
+    public static String getSalt(String userName, String tableName){
+        String salt="";
+        try {
+            PreparedStatement findUser = c.prepareStatement("SELECT saltVal FROM" + tableName + " WHERE username = ?");
+            findUser.setString(1, userName);
+            ResultSet rs = findUser.executeQuery();
+            salt = rs.getNString("saltVal");
+            
+        } catch (Exception ex) {
+            System.err.println(ex.getMessage());
+        }
+        return salt;
+    }
+    
+    public static String getPass(String userName, String tableName){
+        String pass="";
+        try {
+            PreparedStatement findUser = c.prepareStatement("SELECT password FROM" + tableName + " WHERE username = ?");
+            findUser.setString(1, userName);
+            ResultSet rs = findUser.executeQuery();
+            pass = rs.getNString("password");
+            
+        } catch (Exception ex) {
+            System.err.println(ex.getMessage());
+        }
+        return pass;
+    }
 }
