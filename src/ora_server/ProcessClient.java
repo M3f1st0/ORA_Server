@@ -25,6 +25,19 @@ public class ProcessClient implements Runnable {
     @Override
     public void run() {
         try {
+             Authenticator authenticator = new Authenticator();
+            //sent me your username
+            MessageUtils.sendMessage(socket, "GET USERNAME");
+            String uname = MessageUtils.receiveMessage(socket);
+            if(authenticator.findVoter(uname)){
+                authenticator.calculateChallengeAnswer();
+                MessageUtils.sendMessage(socket, authenticator.sendChallenge());
+            }
+            String challengeResult = MessageUtils.receiveMessage(socket);
+            if(authenticator.compareResults(challengeResult.getBytes())){
+                //Access granted
+                MessageUtils.sendMessage(socket, "ACCESS GRANTED");
+            }
             Thread.sleep(10000);
             System.out.println("CLient Thread Started");
             Thread.sleep(5000);
