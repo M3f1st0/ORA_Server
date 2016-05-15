@@ -12,14 +12,17 @@ import java.security.PrivilegedActionException;
 import javax.net.ssl.*;
 import com.sun.net.ssl.*;
 import com.sun.net.ssl.internal.ssl.Provider;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Karolis
  */
-public class ConnectionManager {
+public class ServerConnectionManager {
 
     private final int intSSLport = 4443;
+    private boolean keepProcessing = true;
 
     public void processClient() {
         // Registering the JSSE provider
@@ -30,37 +33,21 @@ public class ConnectionManager {
         System.setProperty("javax.net.ssl.keyStorePassword", "kspasswd");
 
         // Enable debugging to view the handshake and communication which happens between the SSLClient and the SSLServer
-        System.setProperty("javax.net.debug","all");
+        System.setProperty("javax.net.debug", "all");
         try {
             // Initialize the Server Socket
             SSLServerSocketFactory sslServerSocketfactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
             SSLServerSocket sslServerSocket = (SSLServerSocket) sslServerSocketfactory.createServerSocket(intSSLport);
-            SSLSocket sslSocket = (SSLSocket) sslServerSocket.accept();
 
-            // Create Input / Output Streams for communication with the client
-            while (true) {
-                PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true);
-                BufferedReader in = new BufferedReader(
-                        new InputStreamReader(
-                                sslSocket.getInputStream()));
-                String inputLine, outputLine;
-
-                while ((inputLine = in.readLine()) != null) {
-                    out.println(inputLine);
-                    System.out.println(inputLine);
-                }
-
-                // Close the streams and the socket
-                out.close();
-                in.close();
-                sslSocket.close();
-                sslServerSocket.close();
-
+            while (keepProcessing) {
+                System.out.println("wait connection");
+                SSLSocket sslSocket = (SSLSocket) sslServerSocket.accept();
+                process(sslSocket);
             }
+
         } catch (Exception exp) {
             PrivilegedActionException priexp = new PrivilegedActionException(exp);
             System.out.println(" Priv exp --- " + priexp.getMessage());
-
             System.out.println(" Exception occurred .... " + exp);
             exp.printStackTrace();
         }
@@ -69,4 +56,22 @@ public class ConnectionManager {
     public void connectToDB() {
         DBHandler.connect();
     }
+
+    public void process(SSLSocket socket) {
+        String type = MessageUtils.receiveMessage(socket);
+        if (type.contentEquals("Client")) {
+            ProcessClient processClient = new ProcessClient(socket);
+            Thread clientConnection = new Thread(processClient);
+            clientConnection.start();
+        } else if (type.contentEquals("Admin")) {
+            ProcessAdmin processAdmin = new ProcessAdmin(socket);
+            Thread clientConnection = new Thread(processAdmin);
+            clientConnection.start();
+        }
+    }
+
+    public void stopProcessing() {
+        keepProcessing = false;
+    }
+
 }
