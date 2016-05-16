@@ -29,11 +29,13 @@ public class ProcessClient implements Runnable {
             //sent me your username
             MessageUtils.sendMessage(socket, "GET USERNAME");
             String uname = MessageUtils.receiveMessage(socket);
+            System.out.println("CLIENT: "+uname);
             if(authenticator.findVoter(uname)){
                 authenticator.calculateChallengeAnswer();
                 MessageUtils.sendMessage(socket, authenticator.sendChallenge());
             }
             String challengeResult = MessageUtils.receiveMessage(socket);
+            System.out.println("CLIENT: "+challengeResult);
             if(authenticator.compareResults(challengeResult.getBytes())){
                 //Access granted
                 MessageUtils.sendMessage(socket, "ACCESS GRANTED");
