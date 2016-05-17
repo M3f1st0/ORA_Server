@@ -121,8 +121,6 @@ public class Authenticator {
         System.out.println("salt: " + salt);
         System.out.print("challengeAnswer: " + challengeAnswer);
         System.out.println("");
-        System.out.print("responseToChallenge: ");
-        System.out.println("");
         System.out.println("timesToRunHash: " + timesToRunHash);
         System.out.println("Hash bit length: " + HASH_BIT_LENGTH);
         System.out.println("------ENd Server Data--------");
