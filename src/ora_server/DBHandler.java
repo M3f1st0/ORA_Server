@@ -61,8 +61,6 @@ public abstract class DBHandler {
     public static String getSalt(String userName, String tableName){
         String salt="";
         try {
-            System.out.println("Username:"+userName);
-            System.out.println("Tablename: "+tableName);
             PreparedStatement findUser = c.prepareStatement("SELECT saltVal FROM " + tableName + " WHERE username=?;");
             findUser.setString(1, userName);
             ResultSet rs = findUser.executeQuery();
