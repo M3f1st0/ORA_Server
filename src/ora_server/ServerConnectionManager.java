@@ -29,7 +29,7 @@ public class ServerConnectionManager {
         System.setProperty("javax.net.ssl.keyStorePassword", "kspasswd");
 
         // Enable debugging to view the handshake and communication which happens between the SSLClient and the SSLServer
-        System.setProperty("javax.net.debug", "all");
+        //System.setProperty("javax.net.debug", "all");
         try {
             // Initialize the Server Socket
             SSLServerSocketFactory sslServerSocketfactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
