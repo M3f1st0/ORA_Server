@@ -27,21 +27,29 @@ public class ProcessClient implements Runnable {
         try {
              Authenticator authenticator = new Authenticator();
             //sent me your username
+            System.out.println("Server: GET USERNAME");
             MessageUtils.sendMessage(socket, "GET USERNAME");
             String uname = MessageUtils.receiveMessage(socket);
-            System.out.println("CLIENT: "+uname);
+            System.out.println("Client: "+uname);
             if(authenticator.findVoter(uname)){
+                System.out.println("Voter found");
                 authenticator.calculateChallengeAnswer();
-                MessageUtils.sendMessage(socket, authenticator.sendChallenge());
+                String challengeParams = authenticator.sendChallenge();
+                System.out.println("Server: "+challengeParams);
+                MessageUtils.sendMessage(socket, challengeParams);
             }
             String challengeResult = MessageUtils.receiveMessage(socket);
-            System.out.println("CLIENT: "+challengeResult);
-            if(authenticator.compareResults(challengeResult.getBytes())){
+            System.out.println("Client: "+challengeResult);
+            if(authenticator.compareResults(challengeResult)){
                 //Access granted
-                MessageUtils.sendMessage(socket, "ACCESS GRANTED");
+                MessageUtils.sendMessage(socket, "OK");
+                System.out.println("Server: OK");
+            }else{
+                MessageUtils.sendMessage(socket, "FAIL");
+                System.out.println("FAIL");
             }
             Thread.sleep(10000);
-            System.out.println("CLient Thread Started");
+            System.out.println("Client Thread Started");
             Thread.sleep(5000);
             terminateThread();
         } catch (InterruptedException ex) {
