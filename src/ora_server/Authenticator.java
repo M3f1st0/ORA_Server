@@ -7,10 +7,8 @@ package ora_server;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
-import java.util.Arrays;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,93 +20,112 @@ import javax.crypto.spec.PBEKeySpec;
  * @author panos
  */
 public class Authenticator {
+
     private String username = "";
-    private String password= null;
+    private String password = "";
     private Random rand = new SecureRandom();
     private String salt;
-    private byte[] challengeAnswer=null;
-    private byte[] responseToChallenge=null;
-    private int timesToRunHash=0;
-    private final int HASH_BIT_LENGTH = 512;
-    
-    
-    
-    public boolean findVoter(String userName){
-        
+    private String challengeAnswer = "";
+    private String responseToChallenge = "";
+    private int timesToRunHash = 0;
+    private final int HASH_BIT_LENGTH = 256;
+
+    public boolean findVoter(String userName) {
+        System.out.println("Search voter in database...");
         return searchForUsername(userName, "electorate");
-        
+
     }
-    
-    public boolean findAdmin(String userName){
-        
+
+    public boolean findAdmin(String userName) {
+        System.out.println("search admin in database...");
         return searchForUsername(userName, "administrators");
-        
+
     }
-    
-    public void calculateChallengeAnswer(){
-        
+
+    public void calculateChallengeAnswer() {
+        System.out.println("calculating challenge answer...");
         challengeAnswer = challengeFunction();
+
     }
-    
-    public boolean  compareResults(byte[] responseSentByClient){
+
+    public boolean compareResults(String responseSentByClient) {
+        System.out.println("comparing answers...");
         responseToChallenge = responseSentByClient;
-        
-        return Arrays.equals(responseToChallenge, challengeAnswer);
+
+        return challengeAnswer.equalsIgnoreCase(responseToChallenge);
     }
-    
-    public String sendChallenge(){
+
+    public String sendChallenge() {
         //in here we gather 
         //the random number (how many times the hash will be ececuted)
         //the salt
-        StringBuilder challengeParameters =new StringBuilder();
+        printAll();
+        StringBuilder challengeParameters = new StringBuilder();
         challengeParameters.append(salt);
         challengeParameters.append(" ");
         challengeParameters.append(Integer.toString(timesToRunHash));
-        
+
         return challengeParameters.toString();
     }
-     
-    private boolean searchForUsername(String uName, String tableName){
+
+    private boolean searchForUsername(String uName, String tableName) {
         boolean found = false;
         //A call to DB Handler to find user
-        if(DBHandler.findUser(uName, tableName)){
-            password = retreivePasswordFromDatabase(uName,tableName);
-            salt = retreiveSaltFromDatabase(uName,tableName);
+        if (DBHandler.findUser(uName, tableName)) {
+            password = retreivePasswordFromDatabase(uName, tableName);
+            salt = retreiveSaltFromDatabase(uName, tableName);
             found = true;
         }
-        
+
         return found;
     }
-    
-    private String retreivePasswordFromDatabase(String userName, String tableName){
-        String pass="";
+
+    private String retreivePasswordFromDatabase(String userName, String tableName) {
+        String pass = "";
         pass = DBHandler.getPass(userName, tableName);
         return pass;
     }
-    
-    private String retreiveSaltFromDatabase(String userName, String tableName){
-        String s="";
-        
+
+    private String retreiveSaltFromDatabase(String userName, String tableName) {
+        String s = "";
+
         s = DBHandler.getSalt(userName, tableName);
         return s;
-        
+
     }
-    
-    private byte[] challengeFunction(){
-        byte[] hashValue=null;
+
+    private String challengeFunction() {
+        byte[] hashValue = null;
+        String hashString="";
         timesToRunHash = rand.nextInt(2048);
         try {
-            
             SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
             KeySpec keySpec = new PBEKeySpec(password.toCharArray(), salt.getBytes(), timesToRunHash, HASH_BIT_LENGTH);
             hashValue = keyFactory.generateSecret(keySpec).getEncoded();
-            
+            for (int i = 0; i < hashValue.length; i++) {
+                hashString = hashString + Integer.toHexString(0xFF & hashValue[i]);
+            }
+
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(Authenticator.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InvalidKeySpecException ex) {
             Logger.getLogger(Authenticator.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return hashValue;
-    } 
-    
+        return hashString;
+    }
+
+    private void printAll() {
+        System.out.println("------Server Data------");
+        System.out.println("username: " + username);
+        System.out.println("password: " + password);
+        System.out.println("salt: " + salt);
+        System.out.print("challengeAnswer: " + challengeAnswer);
+        System.out.println("");
+        System.out.print("responseToChallenge: ");
+        System.out.println("");
+        System.out.println("timesToRunHash: " + timesToRunHash);
+        System.out.println("Hash bit length: " + HASH_BIT_LENGTH);
+        System.out.println("------ENd Server Data--------");
+    }
+
 }
