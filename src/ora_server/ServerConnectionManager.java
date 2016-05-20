@@ -18,7 +18,7 @@ import com.sun.net.ssl.internal.ssl.Provider;
 public class ServerConnectionManager {
 
     private final int intSSLport = 4443;
-    private boolean keepProcessing = true;
+    private static boolean keepProcessing = true;
 
     public void processClient() {
         // Registering the JSSE provider
@@ -40,6 +40,7 @@ public class ServerConnectionManager {
                 SSLSocket sslSocket = (SSLSocket) sslServerSocket.accept();
                 process(sslSocket);
             }
+            System.out.println("Voting Finished");
 
         } catch (Exception exp) {
             PrivilegedActionException priexp = new PrivilegedActionException(exp);
@@ -66,7 +67,7 @@ public class ServerConnectionManager {
         }
     }
 
-    public void stopProcessing() {
+    public static void stopProcessing() {
         keepProcessing = false;
     }
 
