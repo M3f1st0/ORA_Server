@@ -5,7 +5,9 @@
  */
 package ora_server;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.SSLSocket;
@@ -17,6 +19,8 @@ import javax.net.ssl.SSLSocket;
 public class ProcessAdmin implements Runnable {
 
     private final SSLSocket socket;
+    private boolean keepProcessing = true;
+    
 
     public ProcessAdmin(SSLSocket socket) {
         this.socket = socket;
@@ -25,35 +29,24 @@ public class ProcessAdmin implements Runnable {
     @Override
     public void run() {
         try {
-             Authenticator authenticator = new Authenticator();
-            //sent me your username
-            System.out.println("Server: GET USERNAME");
-            MessageUtils.sendMessage(socket, "GET USERNAME");
-            String uname = MessageUtils.receiveMessage(socket);
-            System.out.println("Client: "+uname);
-            if(authenticator.findAdmin(uname)){
-                System.out.println("Voter found");
-                authenticator.calculateChallengeAnswer();
-                String challengeParams = authenticator.sendChallenge();
-                System.out.println("Server: "+challengeParams);
-                MessageUtils.sendMessage(socket, challengeParams);
+            authenticate();
+            while (keepProcessing) {
+                System.out.println("Admin waiting for command...");
+                String command = MessageUtils.receiveMessage(socket);
+                if (command.contentEquals("set_question")) {
+                    String question = MessageUtils.receiveMessage(socket);
+                    setQuestion(question);
+                    MessageUtils.sendMessage(socket, "ACK");
+                } else if (command.contentEquals("logout")) {
+                    System.out.println("Admin Logout");
+                    keepProcessing = false;
+                }
             }
-            String challengeResult = MessageUtils.receiveMessage(socket);
-            System.out.println("Client: "+challengeResult);
-            if(authenticator.compareResults(challengeResult)){
-                //Access granted
-                MessageUtils.sendMessage(socket, "OK");
-                System.out.println("Server: OK");
-            }else{
-                MessageUtils.sendMessage(socket, "FAIL");
-                System.out.println("FAIL");
-            }
-            Thread.sleep(10000);
-            System.out.println("Client Thread Started");
-            Thread.sleep(5000);
             terminateThread();
-        } catch (InterruptedException ex) {
+        } catch (Exception ex) {
+            System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             Logger.getLogger(ProcessClient.class.getName()).log(Level.SEVERE, null, ex);
+            keepProcessing = false;
         }
     }
 
@@ -68,6 +61,50 @@ public class ProcessAdmin implements Runnable {
             socket.close();
         } catch (IOException ex) {
             Logger.getLogger(ProcessClient.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void authenticate() {
+        Authenticator authenticator = new Authenticator();
+        //sent me your username
+        System.out.println("Server: GET USERNAME");
+        MessageUtils.sendMessage(socket, "GET USERNAME");
+        String uname = MessageUtils.receiveMessage(socket);
+        System.out.println("Client: " + uname);
+        if (authenticator.findAdmin(uname)) {
+            System.out.println("Voter found");
+            authenticator.calculateChallengeAnswer();
+            String challengeParams = authenticator.sendChallenge();
+            System.out.println("Server: " + challengeParams);
+            MessageUtils.sendMessage(socket, challengeParams);
+        }
+        String challengeResult = MessageUtils.receiveMessage(socket);
+        System.out.println("Client: " + challengeResult);
+        if (authenticator.compareResults(challengeResult)) {
+            //Access granted
+            MessageUtils.sendMessage(socket, "OK");
+            System.out.println("Server: OK");
+        } else {
+            MessageUtils.sendMessage(socket, "FAIL");
+            System.out.println("FAIL");
+            keepProcessing = false;
+        }
+    }
+
+    public void setQuestion(String question) {
+        try {
+            File questionFile = new File("question.txt");
+            if(questionFile.exists()){
+                questionFile.delete();
+            }
+            questionFile.createNewFile();
+            PrintWriter out = new PrintWriter("question.txt");
+            out.println(question);
+            questionFile.setReadOnly();
+            out.close();
+        } catch (IOException ex) {
+            Logger.getLogger(ProcessAdmin.class.getName()).log(Level.SEVERE, null, ex);
+            MessageUtils.sendMessage(socket, "NAK");
         }
     }
 }
