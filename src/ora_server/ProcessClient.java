@@ -41,7 +41,6 @@ public class ProcessClient implements Runnable {
             }
             terminateThread();
         } catch (Exception ex) {
-            System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             Logger.getLogger(ProcessClient.class.getName()).log(Level.SEVERE, null, ex);
             keepProcessing = false;
         }
@@ -98,5 +97,7 @@ public class ProcessClient implements Runnable {
 
     public void sendStatistics() {
         //TODO calculate and send current statistics
+        //using mock statistics now format (YES:NO) procentage
+        MessageUtils.sendMessage(socket, "60:40");
     }
 }

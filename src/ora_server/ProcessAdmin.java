@@ -44,7 +44,6 @@ public class ProcessAdmin implements Runnable {
             }
             terminateThread();
         } catch (Exception ex) {
-            System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             Logger.getLogger(ProcessClient.class.getName()).log(Level.SEVERE, null, ex);
             keepProcessing = false;
         }
