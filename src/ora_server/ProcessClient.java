@@ -17,6 +17,7 @@ import javax.net.ssl.SSLSocket;
 public class ProcessClient implements Runnable {
 
     private final SSLSocket socket;
+    private boolean keepProcessing = true;
 
     public ProcessClient(SSLSocket socket) {
         this.socket = socket;
@@ -25,35 +26,24 @@ public class ProcessClient implements Runnable {
     @Override
     public void run() {
         try {
-             Authenticator authenticator = new Authenticator();
-            //sent me your username
-            System.out.println("Server: GET USERNAME");
-            MessageUtils.sendMessage(socket, "GET USERNAME");
-            String uname = MessageUtils.receiveMessage(socket);
-            System.out.println("Client: "+uname);
-            if(authenticator.findVoter(uname)){
-                System.out.println("Voter found");
-                authenticator.calculateChallengeAnswer();
-                String challengeParams = authenticator.sendChallenge();
-                System.out.println("Server: "+challengeParams);
-                MessageUtils.sendMessage(socket, challengeParams);
+            authenticate();
+            while (keepProcessing) {
+                System.out.println("Client waiting for command...");
+                String command = MessageUtils.receiveMessage(socket);
+                if (command.contentEquals("get_question")) {
+                    sendQuestion();
+                } else if (command.contentEquals("get_statistics")) {
+                    sendStatistics();
+                } else if (command.contentEquals("logout")) {
+                    System.out.println("Client Logout");
+                    keepProcessing = false;
+                }
             }
-            String challengeResult = MessageUtils.receiveMessage(socket);
-            System.out.println("Client: "+challengeResult);
-            if(authenticator.compareResults(challengeResult)){
-                //Access granted
-                MessageUtils.sendMessage(socket, "OK");
-                System.out.println("Server: OK");
-            }else{
-                MessageUtils.sendMessage(socket, "FAIL");
-                System.out.println("FAIL");
-            }
-            Thread.sleep(10000);
-            System.out.println("Client Thread Started");
-            Thread.sleep(5000);
             terminateThread();
-        } catch (InterruptedException ex) {
+        } catch (Exception ex) {
+            System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             Logger.getLogger(ProcessClient.class.getName()).log(Level.SEVERE, null, ex);
+            keepProcessing = false;
         }
     }
 
@@ -69,5 +59,44 @@ public class ProcessClient implements Runnable {
         } catch (IOException ex) {
             Logger.getLogger(ProcessClient.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    public void authenticate() {
+        Authenticator authenticator = new Authenticator();
+        //sent me your username
+        System.out.println("Server: GET USERNAME");
+        MessageUtils.sendMessage(socket, "GET USERNAME");
+        String uname = MessageUtils.receiveMessage(socket);
+        System.out.println("Client: " + uname);
+        if (authenticator.findVoter(uname)) {
+            System.out.println("Voter found");
+            authenticator.calculateChallengeAnswer();
+            String challengeParams = authenticator.sendChallenge();
+            System.out.println("Server: " + challengeParams);
+            MessageUtils.sendMessage(socket, challengeParams);
+        } else {
+            keepProcessing = false;
+            MessageUtils.sendMessage(socket, "NotFound");
+            return;
+        }
+        String challengeResult = MessageUtils.receiveMessage(socket);
+        System.out.println("Client: " + challengeResult);
+        if (authenticator.compareResults(challengeResult)) {
+            //Access granted
+            MessageUtils.sendMessage(socket, "OK");
+            System.out.println("Server: OK");
+        } else {
+            MessageUtils.sendMessage(socket, "FAIL");
+            System.out.println("FAIL");
+            keepProcessing = false;
+        }
+    }
+
+    public void sendQuestion() {
+        
+    }
+
+    public void sendStatistics() {
+        //TODO calculate and send current statistics
     }
 }

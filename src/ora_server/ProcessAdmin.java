@@ -77,6 +77,10 @@ public class ProcessAdmin implements Runnable {
             String challengeParams = authenticator.sendChallenge();
             System.out.println("Server: " + challengeParams);
             MessageUtils.sendMessage(socket, challengeParams);
+        } else {
+            keepProcessing = false;
+            MessageUtils.sendMessage(socket, "NotFound");
+            return;
         }
         String challengeResult = MessageUtils.receiveMessage(socket);
         System.out.println("Client: " + challengeResult);
