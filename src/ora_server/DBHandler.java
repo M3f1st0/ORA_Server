@@ -91,13 +91,13 @@ public abstract class DBHandler {
         }
     }
      
-     public static void updateVotes(String username, BigInteger vote) {
+     public static void updateVotes(String username, String vote) {
         try {
             PreparedStatement updateVotes = c.prepareStatement("UPDATE ORAdb.electorate"
                     + "SET Vote=?"
                     + "WHERE username=?;");
             updateVotes.setString(1, username);
-            updateVotes.setString(2, vote.toString());
+            updateVotes.setString(2, vote);
             updateVotes.execute();
         } catch (SQLException ex) {
             Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);

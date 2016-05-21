@@ -26,7 +26,8 @@ public class ProcessClient implements Runnable {
 
     private final SSLSocket socket;
     private boolean keepProcessing = true;
-
+    Authenticator authenticator = null;
+    
     public ProcessClient(SSLSocket socket) {
         this.socket = socket;
     }
@@ -50,10 +51,10 @@ public class ProcessClient implements Runnable {
                     DBHandler.updateVoterStatus(username);
                     MessageUtils.sendMessage(socket, "ACK");
 
-                } else if (command.contentEquals("submit_vote")){
+                } else if (command.contentEquals("submit_vote")) {
                     String vote = MessageUtils.receiveMessage(socket);
-                }
-                    else if (command.contentEquals("get_result")) {
+                    DBHandler.updateVotes(authenticator.getUsername(), vote);
+                } else if (command.contentEquals("get_result")) {
                     MessageUtils.sendMessage(socket, getResult());
                 } else if (command.contentEquals("logout")) {
                     System.out.println("Client Logout");
@@ -82,8 +83,8 @@ public class ProcessClient implements Runnable {
     }
 
     public void authenticate() {
-        Authenticator authenticator = new Authenticator();
         //sent me your username
+        authenticator = new Authenticator();
         System.out.println("Server: GET USERNAME");
         MessageUtils.sendMessage(socket, "GET USERNAME");
         String uname = MessageUtils.receiveMessage(socket);
