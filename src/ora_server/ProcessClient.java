@@ -50,7 +50,10 @@ public class ProcessClient implements Runnable {
                     DBHandler.updateVoterStatus(username);
                     MessageUtils.sendMessage(socket, "ACK");
 
-                } else if (command.contentEquals("get_result")) {
+                } else if (command.contentEquals("submit_vote")){
+                    String vote = MessageUtils.receiveMessage(socket);
+                }
+                    else if (command.contentEquals("get_result")) {
                     MessageUtils.sendMessage(socket, getResult());
                 } else if (command.contentEquals("logout")) {
                     System.out.println("Client Logout");

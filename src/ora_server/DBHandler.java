@@ -97,6 +97,7 @@ public abstract class DBHandler {
                     + "SET Vote=?"
                     + "WHERE username=?;");
             updateVotes.setString(1, username);
+            updateVotes.setString(2, vote.toString());
             updateVotes.execute();
         } catch (SQLException ex) {
             Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
