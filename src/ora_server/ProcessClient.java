@@ -5,12 +5,11 @@
  */
 package ora_server;
 
-import java.io.BufferedReader;
+import Encryption.AdHoPuK;
+import Encryption.HomomorphicPrivateKey;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -39,20 +38,8 @@ public class ProcessClient implements Runnable {
                 String command = MessageUtils.receiveMessage(socket);
                 if (command.contentEquals("get_question")) {
                     sendQuestion();
-                    MessageUtils.sendMessage(socket, "ACK");
-
-                } else if (command.contentEquals("get_statistics")) {
-                    sendStatistics();
-                } else if (command.contentEquals("get_status")) {
-                    String username = MessageUtils.receiveMessage(socket);
-                    sendVoteStatus(username);
-                } else if (command.contentEquals("update_status")) {
-                    String username = MessageUtils.receiveMessage(socket);
-                    DBHandler.updateVoterStatus(username);
-                    MessageUtils.sendMessage(socket, "ACK");
-                }else if (command.contentEquals("send_votes")) {
-                    String username = MessageUtils.receiveMessage(socket);
-                    String votes = MessageUtils.receiveMessage(socket);
+                } else if (command.contentEquals("get_result")) {
+                    MessageUtils.sendMessage(socket, getResult());
                 } else if (command.contentEquals("logout")) {
                     System.out.println("Client Logout");
                     keepProcessing = false;
@@ -142,5 +129,16 @@ public class ProcessClient implements Runnable {
         //TODO calculate and send current statistics
         //using mock statistics now format (YES:NO) procentage
         MessageUtils.sendMessage(socket, "60:40");
+    }
+    private String getResult() {
+        AdHoPuK decryptor = new AdHoPuK();
+        HomomorphicPrivateKey key = decryptor.getPrivateKey();
+        decryptor.init(AdHoPuK.Cipher.DECRYPT_MODE, key);
+        BigInteger[] votesList = DBHandler.getVoteList();
+        BigInteger yesVotes = decryptor.doFinal(votesList);
+        BigInteger totalVotes = DBHandler.getTotalVotes();
+        BigInteger noVotes = totalVotes.subtract(yesVotes);
+        String result = yesVotes.toString()+":"+noVotes.toString();
+        return result;
     }
 }
