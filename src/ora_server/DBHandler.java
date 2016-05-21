@@ -1,10 +1,13 @@
 package ora_server;
 
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -57,37 +60,81 @@ public abstract class DBHandler {
         }
         return found;
     }
-    
-    public static String getSalt(String userName, String tableName){
-        String salt="";
+
+    public static int checkHasVoted(String username) {
+        int hasVoted = 0;
+
+        try {
+            PreparedStatement voterStatus = c.prepareStatement("SELECT hasSubmitedVote FROM electorate WHERE username=?;");
+            voterStatus.setString(1, username);
+            ResultSet rs = voterStatus.executeQuery();
+
+            while (rs.next()) {
+                if (username.contentEquals(rs.getString("username"))) {
+                    hasVoted = rs.getInt("hasSubmitedVote");
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return hasVoted;
+    }
+
+    public static void updateVoterStatus(String username) {
+        try {
+            PreparedStatement updateStatus = c.prepareStatement("UPDATE ORAdb.electorate"
+                    + "SET hasSubmitedVote=1"
+                    + "WHERE username=?;");
+            updateStatus.setString(1, username);
+            updateStatus.execute();
+        } catch (SQLException ex) {
+            Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public static void updateVotes(String username, BigInteger vote) {
+        try {
+            PreparedStatement updateVotes = c.prepareStatement("UPDATE ORAdb.electorate"
+                    + "SET Vote=?"
+                    + "WHERE username=?;");
+            updateVotes.setString(1, username);
+            updateVotes.execute();
+        } catch (SQLException ex) {
+            Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public static String getSalt(String userName, String tableName) {
+        String salt = "";
         try {
             PreparedStatement findUser = c.prepareStatement("SELECT saltVal FROM " + tableName + " WHERE username=?;");
             findUser.setString(1, userName);
             ResultSet rs = findUser.executeQuery();
-            while(rs.next()){
+            while (rs.next()) {
                 salt = rs.getString("saltVal");
             }
-            
+
         } catch (Exception ex) {
             System.err.println(ex.getMessage());
         }
         return salt;
     }
-    
-    public static String getPass(String userName, String tableName){
-        String pass="";
+
+    public static String getPass(String userName, String tableName) {
+        String pass = "";
         try {
             PreparedStatement findUser = c.prepareStatement("SELECT password FROM " + tableName + " WHERE username=?");
             findUser.setString(1, userName);
             ResultSet rs = findUser.executeQuery();
-            
-            while(rs.next()){
+
+            while (rs.next()) {
                 pass = rs.getString("password");
             }
-            
+
         } catch (Exception ex) {
             System.err.println(ex.getMessage());
         }
         return pass;
     }
+
 }

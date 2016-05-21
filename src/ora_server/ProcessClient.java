@@ -5,7 +5,14 @@
  */
 package ora_server;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.math.BigInteger;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.SSLSocket;
@@ -32,8 +39,20 @@ public class ProcessClient implements Runnable {
                 String command = MessageUtils.receiveMessage(socket);
                 if (command.contentEquals("get_question")) {
                     sendQuestion();
+                    MessageUtils.sendMessage(socket, "ACK");
+
                 } else if (command.contentEquals("get_statistics")) {
                     sendStatistics();
+                } else if (command.contentEquals("get_status")) {
+                    String username = MessageUtils.receiveMessage(socket);
+                    sendVoteStatus(username);
+                } else if (command.contentEquals("update_status")) {
+                    String username = MessageUtils.receiveMessage(socket);
+                    DBHandler.updateVoterStatus(username);
+                    MessageUtils.sendMessage(socket, "ACK");
+                }else if (command.contentEquals("send_votes")) {
+                    String username = MessageUtils.receiveMessage(socket);
+                    String votes = MessageUtils.receiveMessage(socket);
                 } else if (command.contentEquals("logout")) {
                     System.out.println("Client Logout");
                     keepProcessing = false;
@@ -91,9 +110,33 @@ public class ProcessClient implements Runnable {
         }
     }
 
-    public void sendQuestion() {
-        
+    public String sendQuestion() {
+        String question = null;
+        try {
+            question = new Scanner(new File("question.txt")).useDelimiter("\\Z").next();
+            System.out.println(question);
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(ProcessClient.class.getName()).log(Level.SEVERE, null, ex);
+            MessageUtils.sendMessage(socket, "NAK");
+        } catch (IOException ex) {
+            Logger.getLogger(ProcessClient.class.getName()).log(Level.SEVERE, null, ex);
+            MessageUtils.sendMessage(socket, "NAK");
+        }
+        return question;
     }
+
+    public void sendVoteStatus(String username) {
+        int voteStatus = DBHandler.checkHasVoted(username);
+        if (voteStatus == 0) {
+            MessageUtils.sendMessage(socket, "ACK");
+            System.out.println("Has not voted yet.");
+        } else if (voteStatus == 1) {
+            MessageUtils.sendMessage(socket, "NAK");
+            System.out.println("Has already voted.");
+        }
+    }
+
+    
 
     public void sendStatistics() {
         //TODO calculate and send current statistics
