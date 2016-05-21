@@ -5,9 +5,12 @@
  */
 package ora_server;
 
+import Encryption.AdHoPuK;
+import Encryption.HomomorphicPrivateKey;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.math.BigInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.SSLSocket;
@@ -21,7 +24,6 @@ public class ProcessAdmin implements Runnable {
     private final SSLSocket socket;
     private boolean keepProcessing = true;
     
-
     public ProcessAdmin(SSLSocket socket) {
         this.socket = socket;
     }
@@ -40,6 +42,8 @@ public class ProcessAdmin implements Runnable {
                 } else if (command.contentEquals("logout")) {
                     System.out.println("Admin Logout");
                     keepProcessing = false;
+                } else if (command.contentEquals("get_result")) {
+                    MessageUtils.sendMessage(socket, getResult());
                 }
             }
             terminateThread();
@@ -97,7 +101,7 @@ public class ProcessAdmin implements Runnable {
     public void setQuestion(String question) {
         try {
             File questionFile = new File("question.txt");
-            if(questionFile.exists()){
+            if (questionFile.exists()) {
                 questionFile.delete();
             }
             questionFile.createNewFile();
@@ -110,4 +114,20 @@ public class ProcessAdmin implements Runnable {
             MessageUtils.sendMessage(socket, "NAK");
         }
     }
+
+    private String getResult() {
+        
+        AdHoPuK decryptor = new AdHoPuK();
+        HomomorphicPrivateKey key = decryptor.getPrivateKey();
+        decryptor.init(AdHoPuK.Cipher.DECRYPT_MODE, key);
+        BigInteger[] votesList = DBHandler.getVoteList();
+        BigInteger yesVotes = decryptor.doFinal(votesList);
+        BigInteger totalVotes = DBHandler.getTotalVotes();
+        BigInteger noVotes = totalVotes.subtract(yesVotes);
+        String result = yesVotes.toString()+":"+noVotes.toString();
+        
+        return result;
+    }
+    
+    
 }
