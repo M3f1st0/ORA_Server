@@ -9,9 +9,11 @@ import Encryption.AdHoPuK;
 import Encryption.HomomorphicPrivateKey;
 import java.io.File;
 import java.io.FileNotFoundException;
+
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Scanner;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.SSLSocket;
@@ -20,6 +22,8 @@ import javax.net.ssl.SSLSocket;
  *
  * @author Karolis
  */
+
+
 public class ProcessClient implements Runnable {
 
     private final SSLSocket socket;
@@ -48,6 +52,9 @@ public class ProcessClient implements Runnable {
                     String username = MessageUtils.receiveMessage(socket);
                     DBHandler.updateVoterStatus(username);
                     MessageUtils.sendMessage(socket, "ACK");
+
+                } else if (command.contentEquals("get_result")) {
+                    MessageUtils.sendMessage(socket, getResult());
                 } else if (command.contentEquals("logout")) {
                     System.out.println("Client Logout");
                     keepProcessing = false;
@@ -129,8 +136,8 @@ public class ProcessClient implements Runnable {
             MessageUtils.sendMessage(socket, "NAK");
             System.out.println("Has already voted.");
         }
+    
     }
-
     private String getResult() {
         AdHoPuK decryptor = new AdHoPuK();
         HomomorphicPrivateKey key = decryptor.getPrivateKey();
@@ -141,6 +148,6 @@ public class ProcessClient implements Runnable {
         BigInteger noVotes = totalVotes.subtract(yesVotes);
         String result = yesVotes.toString() + ":" + noVotes.toString();
         return result;
-    }
 
+    }
 }
