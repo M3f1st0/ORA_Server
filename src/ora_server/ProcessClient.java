@@ -22,8 +22,6 @@ import javax.net.ssl.SSLSocket;
  *
  * @author Karolis
  */
-
-
 public class ProcessClient implements Runnable {
 
     private final SSLSocket socket;
@@ -42,7 +40,6 @@ public class ProcessClient implements Runnable {
                 String command = MessageUtils.receiveMessage(socket);
                 if (command.contentEquals("get_question")) {
                     sendQuestion();
-                    MessageUtils.sendMessage(socket, "ACK");
                 } else if (command.contentEquals("get_result")) {
                     MessageUtils.sendMessage(socket, getResult());
                 } else if (command.contentEquals("get_status")) {
@@ -117,6 +114,9 @@ public class ProcessClient implements Runnable {
         try {
             question = new Scanner(new File("question.txt")).useDelimiter("\\Z").next();
             System.out.println(question);
+            //MessageUtils.sendMessage(socket, "ACK");
+            MessageUtils.sendMessage(socket, question);
+
         } catch (FileNotFoundException ex) {
             Logger.getLogger(ProcessClient.class.getName()).log(Level.SEVERE, null, ex);
             MessageUtils.sendMessage(socket, "NAK");
@@ -136,8 +136,9 @@ public class ProcessClient implements Runnable {
             MessageUtils.sendMessage(socket, "NAK");
             System.out.println("Has already voted.");
         }
-    
+
     }
+
     private String getResult() {
         AdHoPuK decryptor = new AdHoPuK();
         HomomorphicPrivateKey key = decryptor.getPrivateKey();
