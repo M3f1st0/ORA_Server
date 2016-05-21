@@ -1,10 +1,13 @@
 package ora_server;
 
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -25,8 +28,8 @@ public abstract class DBHandler {
         try {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
 
-//            String URL = "jdbc:mysql://127.0.0.1:3306/mydb?user=root&password=toor";
-            String URL = "jdbc:mysql://127.0.0.1:3306/mydb?user=root&password=root";
+            String URL = "jdbc:mysql://127.0.0.1:3306/mydb?user=root&password=toor";
+            //String URL = "jdbc:mysql://127.0.0.1:3306/mydb?user=root&password=root";
             c = DriverManager.getConnection(URL);
             if (!c.isClosed()) {
                 System.out.println("Connection established with Database");
@@ -89,5 +92,41 @@ public abstract class DBHandler {
             System.err.println(ex.getMessage());
         }
         return pass;
+    }
+    
+    public static BigInteger[] getVoteList(){
+        BigInteger[] votes = new BigInteger[countTableRows("mydb.electorate")];
+        int index =0;
+        try {
+            
+            PreparedStatement selectVotes = c.prepareCall("SELECT Vote from mydb.electorate;");
+            ResultSet rs = selectVotes.executeQuery();
+            while(rs.next()){
+                votes[index] = new BigInteger(rs.getString("Vote"));
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return votes;
+    }
+    
+    public static BigInteger getTotalVotes(){
+        return BigInteger.valueOf(countTableRows("mydb.electorate"));
+    }
+    
+    private static int countTableRows(String tableName){
+        int rows=0;
+        try {
+            PreparedStatement countRows = c.prepareStatement("SELECT COUNT(*) FROM "+tableName+";");
+            
+            ResultSet rs = countRows.executeQuery();
+
+            while (rs.next()) {
+                rows = rs.getRow();
+            }
+        } catch (Exception ex) {
+            System.err.println(ex.getMessage());
+        }
+        return rows;
     }
 }
