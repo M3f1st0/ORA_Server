@@ -44,10 +44,10 @@ public class AdHoPuK {
     public void init(Cipher mode, ObjectKey key) {
         if (mode == Cipher.ENCRYPT_MODE) {
             encryption = true;
-            privK = (HomomorphicPrivateKey) key;
+            pubK = (HomomorphicPublicKey) key;
         } else if (mode == Cipher.DECRYPT_MODE) {
             decryption = true;
-            pubK = (HomomorphicPublicKey) key;
+            privK = (HomomorphicPrivateKey) key;
         }
     }
     
