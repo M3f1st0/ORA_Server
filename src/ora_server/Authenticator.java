@@ -74,6 +74,7 @@ public class Authenticator {
         if (DBHandler.findUser(uName, tableName)) {
             password = retreivePasswordFromDatabase(uName, tableName);
             salt = retreiveSaltFromDatabase(uName, tableName);
+            username = uName;
             found = true;
         }
 
@@ -116,7 +117,7 @@ public class Authenticator {
 
     private void printAll() {
         System.out.println("------Server Data------");
-        System.out.println("username: " + username);
+        System.out.println("username: " + getUsername());
         System.out.println("password: " + password);
         System.out.println("salt: " + salt);
         System.out.print("challengeAnswer: " + challengeAnswer);
@@ -124,6 +125,13 @@ public class Authenticator {
         System.out.println("timesToRunHash: " + timesToRunHash);
         System.out.println("Hash bit length: " + HASH_BIT_LENGTH);
         System.out.println("------ENd Server Data--------");
+    }
+
+    /**
+     * @return the username
+     */
+    public String getUsername() {
+        return username;
     }
 
 }
