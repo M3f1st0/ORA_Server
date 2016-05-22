@@ -64,7 +64,7 @@ public abstract class DBHandler {
         int hasVoted = 0;
 
         try {
-            PreparedStatement voterStatus = c.prepareStatement("SELECT hasSubmitedVote FROM electorate WHERE username=?;");
+            PreparedStatement voterStatus = c.prepareStatement("SELECT * FROM electorate WHERE username=?;");
             voterStatus.setString(1, username);
             ResultSet rs = voterStatus.executeQuery();
 
@@ -81,10 +81,9 @@ public abstract class DBHandler {
      
      public static void updateVoterStatus(String username) {
         try {
-            PreparedStatement updateStatus = c.prepareStatement("UPDATE ORAdb.electorate"
-                    + "SET hasSubmitedVote=1"
-                    + "WHERE username=?;");
-            updateStatus.setString(1, username);
+            PreparedStatement updateStatus = c.prepareStatement("UPDATE mydb.electorate SET hasSubmitedVote=? WHERE username=?");
+            updateStatus.setInt(1, 1);
+            updateStatus.setString(2, username);
             updateStatus.execute();
         } catch (SQLException ex) {
             Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
@@ -93,11 +92,9 @@ public abstract class DBHandler {
      
      public static void updateVotes(String username, String vote) {
         try {
-            PreparedStatement updateVotes = c.prepareStatement("UPDATE ORAdb.electorate"
-                    + "SET Vote=?"
-                    + "WHERE username=?;");
-            updateVotes.setString(1, username);
-            updateVotes.setString(2, vote);
+            PreparedStatement updateVotes = c.prepareStatement("UPDATE mydb.electorate SET Vote=? WHERE username=?");
+            updateVotes.setString(1, vote);
+            updateVotes.setString(2, username);
             updateVotes.execute();
         } catch (SQLException ex) {
             Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
