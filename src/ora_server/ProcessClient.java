@@ -53,7 +53,7 @@ public class ProcessClient implements Runnable {
 
                 } else if (command.contentEquals("submit_vote")) {
                     String vote = MessageUtils.receiveMessage(socket);
-                    DBHandler.updateVotes(authenticator.getUsername(), vote);
+                    DBHandler.updateVotes(authenticator.getUsername(), vote);                    
                 } else if (command.contentEquals("get_result")) {
                     MessageUtils.sendMessage(socket, getResult());
                 } else if (command.contentEquals("logout")) {

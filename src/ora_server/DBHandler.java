@@ -28,8 +28,8 @@ public abstract class DBHandler {
         try {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
 
-            //String URL = "jdbc:mysql://127.0.0.1:3306/mydb?user=root&password=toor";
-            String URL = "jdbc:mysql://127.0.0.1:3306/mydb?user=root&password=root";
+            String URL = "jdbc:mysql://127.0.0.1:3306/mydb?user=root&password=toor";
+//            String URL = "jdbc:mysql://127.0.0.1:3306/mydb?user=root&password=root";
             c = DriverManager.getConnection(URL);
             if (!c.isClosed()) {
                 System.out.println("Connection established with Database");
@@ -140,7 +140,7 @@ public abstract class DBHandler {
         int index = 0;
         try {
 
-            PreparedStatement selectVotes = c.prepareCall("SELECT Vote from mydb.electorate;");
+            PreparedStatement selectVotes = c.prepareCall("SELECT Vote from mydb.electorate WHERE hasSubmitedVote=1;");
             ResultSet rs = selectVotes.executeQuery();
             while (rs.next()) {
                 if (!rs.getString("Vote").isEmpty()) {
@@ -161,7 +161,7 @@ public abstract class DBHandler {
     private static int countTableRows(String tableName) {
         int rows = 0;
         try {
-            PreparedStatement countRows = c.prepareStatement("SELECT COUNT(*) FROM " + tableName + ";");
+            PreparedStatement countRows = c.prepareStatement("SELECT COUNT(*) FROM " + tableName + " WHERE hasSubmitedVote=1;");
             ResultSet rs = countRows.executeQuery();
             while (rs.next()) {
                 rows = rs.getInt("COUNT(*)");
