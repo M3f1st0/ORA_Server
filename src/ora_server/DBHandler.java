@@ -60,7 +60,8 @@ public abstract class DBHandler {
         }
         return found;
     }
-     public static int checkHasVoted(String username) {
+
+    public static int checkHasVoted(String username) {
         int hasVoted = 0;
 
         try {
@@ -78,8 +79,8 @@ public abstract class DBHandler {
         }
         return hasVoted;
     }
-     
-     public static void updateVoterStatus(String username) {
+
+    public static void updateVoterStatus(String username) {
         try {
             PreparedStatement updateStatus = c.prepareStatement("UPDATE mydb.electorate SET hasSubmitedVote=? WHERE username=?");
             updateStatus.setInt(1, 1);
@@ -89,8 +90,8 @@ public abstract class DBHandler {
             Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-     
-     public static void updateVotes(String username, String vote) {
+
+    public static void updateVotes(String username, String vote) {
         try {
             PreparedStatement updateVotes = c.prepareStatement("UPDATE mydb.electorate SET Vote=? WHERE username=?");
             updateVotes.setString(1, vote);
@@ -100,69 +101,70 @@ public abstract class DBHandler {
             Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-     
-    public static String getSalt(String userName, String tableName){
-        String salt="";
+
+    public static String getSalt(String userName, String tableName) {
+        String salt = "";
         try {
             PreparedStatement findUser = c.prepareStatement("SELECT saltVal FROM " + tableName + " WHERE username=?;");
             findUser.setString(1, userName);
             ResultSet rs = findUser.executeQuery();
-            while(rs.next()){
+            while (rs.next()) {
                 salt = rs.getString("saltVal");
             }
-            
+
         } catch (Exception ex) {
             System.err.println(ex.getMessage());
         }
         return salt;
     }
-    
-    public static String getPass(String userName, String tableName){
-        String pass="";
+
+    public static String getPass(String userName, String tableName) {
+        String pass = "";
         try {
             PreparedStatement findUser = c.prepareStatement("SELECT password FROM " + tableName + " WHERE username=?");
             findUser.setString(1, userName);
             ResultSet rs = findUser.executeQuery();
-            
-            while(rs.next()){
+
+            while (rs.next()) {
                 pass = rs.getString("password");
             }
-            
+
         } catch (Exception ex) {
             System.err.println(ex.getMessage());
         }
         return pass;
     }
-    
-    public static BigInteger[] getVoteList(){
+
+    public static BigInteger[] getVoteList() {
         BigInteger[] votes = new BigInteger[countTableRows("mydb.electorate")];
-        int index =0;
+        int index = 0;
         try {
-            
+
             PreparedStatement selectVotes = c.prepareCall("SELECT Vote from mydb.electorate;");
             ResultSet rs = selectVotes.executeQuery();
-            while(rs.next()){
-                votes[index] = new BigInteger(rs.getString("Vote"));
+            while (rs.next()) {
+                if (!rs.getString("Vote").isEmpty()) {
+                    votes[index] = new BigInteger(rs.getString("Vote"));
+                    index++;
+                }
             }
         } catch (SQLException ex) {
             Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
         return votes;
     }
-    
-    public static BigInteger getTotalVotes(){
+
+    public static BigInteger getTotalVotes() {
         return BigInteger.valueOf(countTableRows("mydb.electorate"));
     }
-    
-    private static int countTableRows(String tableName){
-        int rows=0;
-        try {
-            PreparedStatement countRows = c.prepareStatement("SELECT COUNT(*) FROM "+tableName+";");
-            
-            ResultSet rs = countRows.executeQuery();
 
+    private static int countTableRows(String tableName) {
+        int rows = 0;
+        try {
+            PreparedStatement countRows = c.prepareStatement("SELECT COUNT(*) FROM " + tableName + ";");
+            ResultSet rs = countRows.executeQuery();
             while (rs.next()) {
-                rows = rs.getRow();
+                rows = rs.getInt("COUNT(*)");
             }
         } catch (Exception ex) {
             System.err.println(ex.getMessage());

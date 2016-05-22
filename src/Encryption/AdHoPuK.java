@@ -46,8 +46,25 @@ public class AdHoPuK {
             encryption = true;
             pubK = (HomomorphicPublicKey) key;
         } else if (mode == Cipher.DECRYPT_MODE) {
-            decryption = true;
-            privK = (HomomorphicPrivateKey) key;
+            ObjectInputStream ois = null;
+            try {
+                decryption = true;
+                privK = (HomomorphicPrivateKey) key;
+                ois = new ObjectInputStream(Files.newInputStream(publicKeyPath));
+                pubK = (HomomorphicPublicKey)ois.readObject();
+                n = pubK.getN();
+                lamda = privK.getLamda();
+                g = pubK.getG();
+                m = privK.getM();
+            } catch (Exception ex) {
+                Logger.getLogger(AdHoPuK.class.getName()).log(Level.SEVERE, null, ex);
+            } finally {
+                try {
+                    ois.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(AdHoPuK.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
     }
     
@@ -87,8 +104,8 @@ public class AdHoPuK {
         BigInteger lamda =prK.getLamda();
         BigInteger cipherProduct = new BigInteger("1");
         //multiply all the encrypted votes
-        for (int i = 0; i < votes.length; i++) {
-            cipherProduct = cipherProduct.multiply(votes[i]);
+        for (BigInteger vote: votes) {
+            cipherProduct = cipherProduct.multiply(vote);
         }
         //do modulation and feed it to the decryption method
         return decrypt(cipherProduct.mod(n.pow(2)));
@@ -419,5 +436,4 @@ public class AdHoPuK {
     private BigInteger LofU(BigInteger u) {
         return (u.subtract(BigInteger.ONE)).divide(n);
     }
-
 }
