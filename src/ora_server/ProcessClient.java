@@ -26,7 +26,7 @@ public class ProcessClient implements Runnable {
 
     private final SSLSocket socket;
     private boolean keepProcessing = true;
-    Authenticator authenticator = null;
+    private Authenticator authenticator = null;
     
     public ProcessClient(SSLSocket socket) {
         this.socket = socket;
